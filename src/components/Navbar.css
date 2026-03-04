@@ -1,0 +1,39 @@
+.navbar {
+  position:fixed; top:0; left:0; right:0; z-index:100;
+  display:flex; align-items:center; justify-content:space-between;
+  padding:14px 60px;
+  background:rgba(255,255,255,0.85);
+  backdrop-filter:blur(12px);
+  border-bottom:3px solid var(--yellow);
+  box-shadow:0 4px 24px rgba(124,58,237,0.10);
+}
+.nav-logo {
+  font-family:'Fredoka One',cursive; font-size:2rem;
+  color:var(--purple); text-decoration:none;
+  display:flex; align-items:center; gap:10px;
+}
+.nav-logo span { color:var(--orange); }
+.logo-star { display:inline-block; font-size:1.6rem; animation:spin 4s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+.nav-links { display:flex; gap:10px; list-style:none; align-items:center; }
+.nav-links a {
+  text-decoration:none; font-weight:800; font-size:1rem;
+  color:var(--dark); padding:8px 18px; border-radius:50px; transition:all 0.25s;
+}
+.nav-links a:hover { background:var(--yellow); transform:scale(1.07); }
+.nav-cta {
+  background:linear-gradient(135deg,var(--purple),var(--pink)) !important;
+  color:white !important; box-shadow:0 4px 18px rgba(244,114,182,0.4);
+  animation:pulse-btn 2s ease-in-out infinite;
+}
+@keyframes pulse-btn {
+  0%,100% { box-shadow:0 4px 18px rgba(244,114,182,0.4); }
+  50%      { box-shadow:0 8px 32px rgba(244,114,182,0.7); }
+}
+.nav-back {
+  font-family:'Fredoka One',cursive; font-size:1rem; color:var(--purple);
+  text-decoration:none; padding:10px 24px;
+  border:3px solid var(--purple); border-radius:50px; transition:all 0.25s;
+}
+.nav-back:hover { background:var(--purple); color:white; transform:scale(1.05); }
+@media(max-width:768px){ .navbar{padding:14px 20px;} .nav-links{display:none;} }
