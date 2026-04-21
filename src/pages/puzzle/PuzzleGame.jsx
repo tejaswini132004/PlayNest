@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useFirebaseSettings } from '../../hooks/useFirebaseSettings';
 import './PuzzleGame.css';
 
 // ─────────────────────────────────────────
@@ -178,30 +179,42 @@ const DEFAULT_PHOTOS = [
   { label:'🏔️ Snowy Mountains',  emoji:'🏔️', sceneId:7 },
 ];
 
-const DIFFICULTIES = [
-  { size:2, label:'Easy',   desc:'2×2 · 4 pieces',  emoji:'😊', color:'#34D399', light:'#F0FDF4' },
-  { size:3, label:'Medium', desc:'3×3 · 9 pieces',  emoji:'🤔', color:'#FBBF24', light:'#FFFBEB' },
-  { size:4, label:'Hard',   desc:'4×4 · 16 pieces', emoji:'🤯', color:'#F472B6', light:'#FDF2F8' },
-];
-
 function shuffle(arr) {
   const a = [...arr];
   for (let i=a.length-1;i>0;i--) { const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; }
   return a;
 }
 
-// KEY FIX: compute correct background style for a puzzle piece
-// Uses the ACTUAL rendered slot size so the image slices correctly
+// Compute background style for a puzzle piece
+// Uses CSS object-fit style approach — works at ANY rendered size
+// background-size: N*100% means image is N times the element size
+// background-position: col/(N-1)*100% places the correct slice
 function getPieceStyle(idx, gridSize, imgSrc, slotPx) {
-  if (!imgSrc || !slotPx) return {};
+  if (!imgSrc) return {};
   const col = idx % gridSize;
   const row = Math.floor(idx / gridSize);
-  // background-size = full image = slotPx * gridSize
-  const fullSize = slotPx * gridSize;
+
+  // ALWAYS use pixel-based when we have slotPx (most accurate)
+  if (slotPx && slotPx > 0) {
+    const fullSize = slotPx * gridSize;
+    return {
+      backgroundImage:    `url('${imgSrc}')`,
+      backgroundSize:     `${fullSize}px ${fullSize}px`,
+      backgroundPosition: `-${col * slotPx}px -${row * slotPx}px`,
+      backgroundRepeat:   'no-repeat',
+    };
+  }
+
+  // Percentage fallback: background-size N*100% with correct position %
+  // Formula: xPct = col/(gridSize-1)*100, yPct = row/(gridSize-1)*100
+  // Special case gridSize=1: both 0%
+  const steps = gridSize - 1 || 1;
+  const xPct  = (col / steps) * 100;
+  const yPct  = (row / steps) * 100;
   return {
     backgroundImage:    `url('${imgSrc}')`,
-    backgroundSize:     `${fullSize}px ${fullSize}px`,
-    backgroundPosition: `-${col * slotPx}px -${row * slotPx}px`,
+    backgroundSize:     `${gridSize * 100}% ${gridSize * 100}%`,
+    backgroundPosition: `${xPct}% ${yPct}%`,
     backgroundRepeat:   'no-repeat',
   };
 }
@@ -209,13 +222,9 @@ function getPieceStyle(idx, gridSize, imgSrc, slotPx) {
 export default function PuzzleGame() {
   const navigate = useNavigate();
 
-  // ── SHARED STATE ──
-  const [view,          setView]         = useState('setup');
-  const [uploadedImage, setUploadedImage] = useState(null);
-  const [gridSize,      setGridSize]     = useState(2);
-  const [dragOver,      setDragOver]     = useState(false);
-  const [saved,         setSaved]        = useState(false);
-  const fileRef = useRef();
+  // Load settings from Firestore (real-time!)
+  const { data: fbSettings, loading: fbLoading } = useFirebaseSettings('puzzleGame');
+  const photos = fbSettings?.photos || []; // array of {image, gridSize} objects
 
   // ── PLAY STATE ──
   const [photoIdx,    setPhotoIdx]    = useState(0);
@@ -236,26 +245,57 @@ export default function PuzzleGame() {
   const dragRef     = useRef({ pieceId:null, fromSlot:null, fromPool:false });
   const confettiRef = useRef();
 
+  // Get current photo's image and gridSize
+  const currentPhoto  = photos.length > 0 ? photos[photoIdx % photos.length] : null;
+  const currentImage  = currentPhoto ? (currentPhoto.image || currentPhoto) : null;
+  const gridSize      = currentPhoto?.gridSize || 2;
+
   const totalPieces = gridSize * gridSize;
   const progress    = totalPieces > 0 ? Math.round((placedCount/totalPieces)*100) : 0;
-  const photoLabel  = uploadedImage ? '📸 Your Photo' : DEFAULT_PHOTOS[photoIdx % DEFAULT_PHOTOS.length].label;
+
+  // Init puzzle when Firebase settings load OR when photos array arrives
+  // useRef to track if we already initialized with real photos
+  const initializedRef = React.useRef(false);
+
+  useEffect(() => {
+    if (fbLoading) return;
+    // If photos loaded, init with first photo
+    if (photos.length > 0) {
+      const photo = photos[0];
+      const img   = photo.image || photo;
+      const gSize = photo?.gridSize || 2;
+      initPuzzle(0, gSize, img);
+      initializedRef.current = true;
+    } else if (!initializedRef.current) {
+      // No photos — use built-in scene
+      initPuzzle(0, 2, null);
+      initializedRef.current = true;
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [fbLoading, photos.length]);
 
   // Measure grid slot size after render
+  // Run on gridSize AND activeImg changes so pieces always have correct size
   useEffect(() => {
-    if (view !== 'play') return;
     const measure = () => {
       if (gridRef.current) {
         const firstSlot = gridRef.current.querySelector('.pg-slot');
         if (firstSlot) {
-          setSlotPx(firstSlot.getBoundingClientRect().width);
+          const w = firstSlot.getBoundingClientRect().width;
+          if (w > 0) setSlotPx(w);
         }
       }
     };
-    // measure after paint
-    const t = setTimeout(measure, 50);
+    // Try multiple times to catch the right moment
+    const t1 = setTimeout(measure, 50);
+    const t2 = setTimeout(measure, 200);
+    const t3 = setTimeout(measure, 500);
     window.addEventListener('resize', measure);
-    return () => { clearTimeout(t); window.removeEventListener('resize', measure); };
-  }, [view, gridSize]);
+    return () => {
+      clearTimeout(t1); clearTimeout(t2); clearTimeout(t3);
+      window.removeEventListener('resize', measure);
+    };
+  }, [gridSize, activeImg, slots]);
 
   // ── INIT PUZZLE ──
   const initPuzzle = useCallback((idx=0, gSize=2, img=null) => {
@@ -269,31 +309,6 @@ export default function PuzzleGame() {
     setPieces(shuffle(Array.from({ length: gSize*gSize }, (_,i) => i)));
     setSlots(Array(gSize*gSize).fill(null));
   }, []);
-
-  const switchToPlay = () => {
-    setView('play');
-    initPuzzle(photoIdx, gridSize, uploadedImage);
-    // Re-measure after switching
-    setTimeout(() => {
-      if (gridRef.current) {
-        const s = gridRef.current.querySelector('.pg-slot');
-        if (s) setSlotPx(s.getBoundingClientRect().width);
-      }
-    }, 80);
-  };
-
-  // ── FILE UPLOAD ──
-  const handleFile = (file) => {
-    if (!file || !file.type.startsWith('image/')) return;
-    const reader = new FileReader();
-    reader.onload = (e) => setUploadedImage(e.target.result);
-    reader.readAsDataURL(file);
-  };
-
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => { setSaved(false); switchToPlay(); }, 1000);
-  };
 
   // ── DRAG HANDLERS ──
   const onPieceDragStart = (pieceId, fromSlot=null) => {
@@ -362,18 +377,40 @@ export default function PuzzleGame() {
   };
 
   const triggerWin = () => {
-    const nextIdx = (photoIdx+1) % DEFAULT_PHOTOS.length;
-    if (!uploadedImage) setNextLabel(`${DEFAULT_PHOTOS[nextIdx].emoji} ${DEFAULT_PHOTOS[nextIdx].label}`);
+    const totalPool = photos.length + DEFAULT_PHOTOS.length;
+    const nextIdx   = (photoIdx + 1) % totalPool;
+    if (nextIdx >= photos.length) {
+      // Next will be a built-in scene — show its name as teaser
+      const sceneIdx = nextIdx - photos.length;
+      const scene = DEFAULT_PHOTOS[sceneIdx % DEFAULT_PHOTOS.length];
+      setNextLabel(`${scene.emoji} ${scene.label}`);
+    } else {
+      setNextLabel(`📸 Photo ${nextIdx + 1}`);
+    }
     setShowWin(true);
     launchConfetti();
   };
 
   const playAgain = () => {
-    const nextIdx = uploadedImage ? photoIdx : (photoIdx+1) % DEFAULT_PHOTOS.length;
-    setPhotoIdx(nextIdx);
     setShowWin(false);
     if (confettiRef.current) confettiRef.current.innerHTML = '';
-    initPuzzle(nextIdx, gridSize, uploadedImage);
+
+    // Total pool = custom photos FIRST, then all 8 built-in scenes
+    const totalPool = photos.length + DEFAULT_PHOTOS.length;
+    const nextIdx   = (photoIdx + 1) % totalPool;
+    setPhotoIdx(nextIdx);
+
+    if (nextIdx < photos.length) {
+      // Still in custom photos range
+      const nextPhoto = photos[nextIdx];
+      const nextImg   = nextPhoto ? (nextPhoto.image || nextPhoto) : null;
+      const nextGrid  = nextPhoto?.gridSize || 2;
+      initPuzzle(nextIdx, nextGrid, nextImg);
+    } else {
+      // Moved into built-in scenes range
+      const sceneIdx = nextIdx - photos.length; // 0 to 7
+      initPuzzle(sceneIdx, 2, null);
+    }
   };
 
   const launchConfetti = () => {
@@ -391,7 +428,33 @@ export default function PuzzleGame() {
   };
 
   // Pool piece size = slotPx (same size as grid slots)
- const poolPieceSize = slotPx ? Math.min(80, Math.floor(slotPx * 0.55)) : 70;
+  const poolPieceSize = slotPx ? Math.min(80, Math.floor(slotPx * 0.55)) : 70;
+  // photoLabel: show correct label whether it's a custom photo or built-in scene
+  const photoLabel = (() => {
+    if (photos.length === 0) {
+      // No custom photos — pure built-in scenes
+      return DEFAULT_PHOTOS[photoIdx % DEFAULT_PHOTOS.length].label;
+    }
+    if (photoIdx < photos.length) {
+      // Custom photo
+      return `📸 Photo ${photoIdx + 1} of ${photos.length} (${gridSize}×${gridSize})`;
+    }
+    // Built-in scene after custom photos
+    const sceneIdx = photoIdx - photos.length;
+    return DEFAULT_PHOTOS[sceneIdx % DEFAULT_PHOTOS.length].label;
+  })();
+
+  // Show loading while Firebase loads
+  if (fbLoading) {
+    return (
+      <div className="pg-page" style={{display:'flex',alignItems:'center',justifyContent:'center',minHeight:'100vh'}}>
+        <div style={{textAlign:'center'}}>
+          <div style={{fontSize:'3rem',marginBottom:'16px'}}>🧩</div>
+          <div style={{fontFamily:'Fredoka One,cursive',fontSize:'1.3rem',color:'#7C3AED'}}>Loading puzzle...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="pg-page">
@@ -399,97 +462,12 @@ export default function PuzzleGame() {
       {/* TOP BAR */}
       <div className="pg-topbar">
         <div className="pg-logo">✨ Play<span>Nest</span></div>
-        <div className="pg-tb-title">🧩 Picture Puzzle</div>
-        <button className="pg-tb-btn" onClick={() => navigate('/home')}>🏠 Home</button>
+        <div className="pg-tb-title">🧩 {photoLabel}</div>
+        <button className="pg-tb-btn" onClick={() => navigate('/child/dashboard')}>🏠 My Games</button>
       </div>
 
-      {/* TOGGLE */}
-      <div className="pg-toggle-wrap">
-        <div className="pg-toggle">
-          <button className={`pg-vt-btn ${view==='setup'?'active':''}`} onClick={() => setView('setup')}>
-            🎨 Parent Setup
-          </button>
-          <button className={`pg-vt-btn ${view==='play'?'active':''}`} onClick={switchToPlay}>
-            🧒 Child Play
-          </button>
-        </div>
-      </div>
-
-      {/* ══ PARENT SETUP ══ */}
-      {view === 'setup' && (
-        <div className="pg-setup">
-
-          <div className="pg-card">
-            <div className="pg-step-header">
-              <div className="pg-step-num">1</div>
-              <div>
-                <div className="pg-step-title">Upload a Photo 📸</div>
-                <div className="pg-step-sub">Upload your own — or skip to use 8 built-in scenes! 🌸🦁🌊</div>
-              </div>
-            </div>
-            {!uploadedImage ? (
-              <div className={`pg-upload-zone ${dragOver?'drag-over':''}`}
-                onClick={() => fileRef.current.click()}
-                onDragOver={e=>{e.preventDefault();setDragOver(true);}}
-                onDragLeave={()=>setDragOver(false)}
-                onDrop={e=>{e.preventDefault();setDragOver(false);handleFile(e.dataTransfer.files[0]);}}
-              >
-                <input ref={fileRef} type="file" accept="image/*" style={{display:'none'}}
-                  onChange={e=>handleFile(e.target.files[0])} />
-                <div className="pg-upload-icon">📸</div>
-                <div className="pg-upload-title">Drag & Drop or Click to Upload</div>
-                <div className="pg-upload-sub">JPG, PNG • Max 10MB</div>
-              </div>
-            ) : (
-              <div className="pg-preview">
-                <img src={uploadedImage} alt="Preview" className="pg-preview-img" />
-                <button className="pg-change-btn" onClick={()=>setUploadedImage(null)}>🔄 Change Photo</button>
-              </div>
-            )}
-          </div>
-
-          <div className="pg-card">
-            <div className="pg-step-header">
-              <div className="pg-step-num">2</div>
-              <div>
-                <div className="pg-step-title">Choose Difficulty 🎯</div>
-                <div className="pg-step-sub">How many pieces for the puzzle?</div>
-              </div>
-            </div>
-            <div className="pg-diff-grid">
-              {DIFFICULTIES.map(d => (
-                <div key={d.size} className={`pg-diff-card ${gridSize===d.size?'selected':''}`}
-                  style={{'--dc':d.color,'--dl':d.light}}
-                  onClick={()=>setGridSize(d.size)}
-                >
-                  {gridSize===d.size && <div className="pg-diff-check">✓</div>}
-                  <div className="pg-diff-emoji">{d.emoji}</div>
-                  <div className="pg-diff-label">{d.label}</div>
-                  <div className="pg-diff-desc">{d.desc}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          <div className="pg-card">
-            <div className="pg-step-header">
-              <div className="pg-step-num">3</div>
-              <div>
-                <div className="pg-step-title">Save & Publish 🚀</div>
-                <div className="pg-step-sub">Arjun can start playing right away!</div>
-              </div>
-            </div>
-            <button className="pg-save-btn" onClick={handleSave} disabled={saved}>
-              {saved ? '✅ Saved! Opening Play Mode...' : '🎉 Save & Publish Game!'}
-            </button>
-          </div>
-
-        </div>
-      )}
-
-      {/* ══ CHILD PLAY ══ */}
-      {view === 'play' && (
-        <div className="pg-play-wrap">
+      {/* CHILD PLAY — direct, no toggle */}
+      <div className="pg-play-wrap">
           <div className="pg-play-layout">
 
             {/* PUZZLE AREA */}
@@ -542,7 +520,8 @@ export default function PuzzleGame() {
                         draggable
                         onDragStart={()=>onPieceDragStart(pieceId,slotIdx)}
                         style={{
-                          width:'100%', height:'100%',
+                          width: slotPx > 0 ? slotPx : '100%',
+                          height: slotPx > 0 ? slotPx : '100%',
                           ...getPieceStyle(pieceId, gridSize, activeImg, slotPx),
                         }}
                       />
@@ -587,7 +566,6 @@ export default function PuzzleGame() {
 
           </div>
         </div>
-      )}
 
       {/* WIN SCREEN */}
       {showWin && (

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import StarsBg from '../../components/StarsBg';
 import './ChildDashboard.css';
+import { useUserData } from '../../hooks/useUserData';
 
 const GAMES = [
   {
@@ -45,7 +46,7 @@ const GAMES = [
     stars: 2,
     plays: 6,
     isNew: true,
-    path: '/child/play/mcq',
+    path: '/child/play/gesture',
     wide: false,
   },
   {
@@ -85,6 +86,7 @@ function StarRating({ count }) {
 
 function ChildDashboard() {
   const navigate = useNavigate();
+  const { childName } = useUserData();
 
   return (
     <div className="cd-wrapper">
@@ -107,7 +109,7 @@ function ChildDashboard() {
         <div className="cd-welcome">
           <div className="cd-welcome-left">
             <div className="cd-greeting">
-              Hey, <span>Arjun!</span> 👋
+              <span>{`Hey, ${childName}! 👋`}</span> 👋
             </div>
             <div className="cd-subgreeting">
               It's a great day to learn something new!

@@ -1,0 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&display=swap');
+
+/* ── PAGE ── */
+.vs-page { min-height:100vh; background:linear-gradient(160deg,#EFF6FF,#DBEAFE,#FFF7ED); font-family:'Nunito',sans-serif; }
+
+/* ── TOPBAR ── */
+.vs-topbar { position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(255,255,255,0.9);backdrop-filter:blur(12px);border-bottom:3px solid #BFDBFE;box-shadow:0 4px 20px rgba(37,99,235,0.08); }
+.vs-logo { font-family:'Fredoka One',cursive;font-size:1.5rem;color:#2563EB; }
+.vs-logo span { color:#FB923C; }
+.vs-tb-title { font-family:'Fredoka One',cursive;font-size:1.2rem;color:#1E1B4B; }
+.vs-back-btn { padding:8px 18px;border-radius:50px;border:none;background:rgba(37,99,235,0.1);color:#2563EB;font-family:'Fredoka One',cursive;font-size:0.9rem;cursor:pointer;transition:all 0.2s; }
+.vs-back-btn:hover { background:#2563EB;color:white; }
+
+/* ── CONTENT ── */
+.vs-content { max-width:760px;margin:0 auto;padding:28px 20px 60px;display:flex;flex-direction:column;gap:20px; }
+
+/* ── INFO BANNER ── */
+.vs-info-banner { background:linear-gradient(135deg,#2563EB,#7C3AED);border-radius:20px;padding:18px 24px;display:flex;align-items:center;gap:16px;box-shadow:0 8px 24px rgba(37,99,235,0.25); }
+.vs-info-icon { font-size:2rem;flex-shrink:0; }
+.vs-info-title { font-family:'Fredoka One',cursive;font-size:1rem;color:white;margin-bottom:3px; }
+.vs-info-sub { font-size:0.83rem;color:rgba(255,255,255,0.85);font-weight:700;line-height:1.5; }
+
+/* ── CARD ── */
+.vs-card { background:white;border-radius:28px;padding:28px;box-shadow:0 6px 28px rgba(37,99,235,0.08);border:2px solid #DBEAFE;animation:vs-in 0.5s ease both; }
+@keyframes vs-in { from{opacity:0;transform:translateY(18px);}to{opacity:1;transform:translateY(0);} }
+.vs-step-header { display:flex;align-items:center;gap:14px;margin-bottom:18px; }
+.vs-step-num { width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#2563EB,#7C3AED);color:white;font-family:'Fredoka One',cursive;font-size:1.2rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(37,99,235,0.3); }
+.vs-step-title { font-family:'Fredoka One',cursive;font-size:1.25rem;color:#1E1B4B; }
+.vs-step-sub { font-size:0.85rem;color:#9CA3AF;font-weight:700;margin-top:2px; }
+
+/* ── ADD FORM ── */
+.vs-add-form { background:#F0F9FF;border-radius:18px;padding:18px;border:2px solid #BAE6FD;display:flex;flex-direction:column;gap:12px;margin-bottom:20px; }
+.vs-add-form-title { font-family:'Fredoka One',cursive;font-size:1rem;color:#0369A1;margin-bottom:4px; }
+.vs-add-row { display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end; }
+.vs-form-group { display:flex;flex-direction:column;gap:5px;min-width:140px;flex:1; }
+.vs-form-wide { flex:2; }
+.vs-form-label { font-family:'Fredoka One',cursive;font-size:0.8rem;color:#2563EB; }
+.vs-form-input { padding:10px 13px;border-radius:11px;border:2.5px solid #BFDBFE;font-family:'Nunito',sans-serif;font-size:0.9rem;color:#1E1B4B;outline:none;transition:border-color 0.2s;background:white; }
+.vs-form-input:focus { border-color:#2563EB; }
+.vs-form-select { padding:10px 13px;border-radius:11px;border:2.5px solid #BFDBFE;font-family:'Nunito',sans-serif;font-size:0.88rem;outline:none;background:white;cursor:pointer;color:#1E1B4B; }
+.vs-form-select:focus { border-color:#2563EB; }
+.vs-add-btn { padding:11px 22px;border-radius:12px;border:none;background:linear-gradient(135deg,#2563EB,#7C3AED);color:white;font-family:'Fredoka One',cursive;font-size:1rem;cursor:pointer;transition:all 0.2s;white-space:nowrap;align-self:flex-end; }
+.vs-add-btn:hover { transform:translateY(-2px);box-shadow:0 6px 16px rgba(37,99,235,0.3); }
+
+/* ── FILTER TABS ── */
+.vs-filter-tabs { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px; }
+.vs-filter-tab { padding:6px 14px;border-radius:50px;border:2px solid #BFDBFE;background:white;color:#6B7280;font-family:'Fredoka One',cursive;font-size:0.8rem;cursor:pointer;transition:all 0.2s; }
+.vs-filter-tab:hover { border-color:#2563EB;color:#2563EB; }
+
+/* ── QUESTION LIST ── */
+.vs-question-list { display:flex;flex-direction:column;gap:10px;min-height:40px; }
+.vs-empty { text-align:center;color:#9CA3AF;font-family:'Fredoka One',cursive;padding:20px;font-size:0.95rem;background:#F9FAFB;border-radius:14px;border:2px dashed #E5E7EB; }
+
+/* Normal question row */
+.vs-question-row { display:flex;align-items:center;gap:10px;background:#F8FAFC;border-radius:16px;padding:12px 14px;border:2px solid #E2E8F0;animation:vs-in 0.3s ease both;transition:border-color 0.2s; }
+.vs-question-row:hover { border-color:#BFDBFE; }
+.vs-question-row.vs-editing { background:#EFF6FF;border:2.5px solid #2563EB;flex-direction:column;align-items:stretch; }
+
+/* Reorder arrows */
+.vs-reorder { display:flex;flex-direction:column;align-items:center;gap:2px;flex-shrink:0; }
+.vs-arrow-btn { background:none;border:none;font-size:0.7rem;cursor:pointer;color:#9CA3AF;padding:1px 4px;line-height:1;transition:color 0.2s; }
+.vs-arrow-btn:hover:not(:disabled) { color:#2563EB; }
+.vs-arrow-btn:disabled { opacity:0.25;cursor:not-allowed; }
+.vs-q-num { font-family:'Fredoka One',cursive;font-size:0.85rem;color:#2563EB;width:22px;text-align:center; }
+
+/* Question content */
+.vs-q-content { flex:1;min-width:0; }
+.vs-q-text { font-family:'Fredoka One',cursive;font-size:0.95rem;color:#1E1B4B;margin-bottom:5px;word-break:break-word; }
+.vs-q-meta { display:flex;align-items:center;gap:8px;flex-wrap:wrap; }
+.vs-q-answer { font-size:0.8rem;color:#059669;font-weight:700; }
+.vs-q-cat { font-family:'Fredoka One',cursive;font-size:0.72rem;padding:3px 10px;border-radius:50px;font-weight:700; }
+
+/* Action buttons */
+.vs-q-actions { display:flex;gap:6px;flex-shrink:0; }
+.vs-edit-btn, .vs-del-btn { background:none;border:none;font-size:1.1rem;cursor:pointer;padding:4px 6px;border-radius:8px;transition:background 0.2s; }
+.vs-edit-btn:hover { background:#EFF6FF; }
+.vs-del-btn:hover  { background:#FFF1F2; }
+
+/* Edit form inside row */
+.vs-edit-form { display:flex;flex-direction:column;gap:10px; }
+.vs-edit-row { display:flex;gap:10px;flex-wrap:wrap; }
+.vs-edit-actions { display:flex;gap:8px; }
+.vs-save-edit-btn { padding:8px 18px;border-radius:10px;border:none;background:linear-gradient(135deg,#059669,#34D399);color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;cursor:pointer;transition:all 0.2s; }
+.vs-save-edit-btn:hover { transform:translateY(-1px); }
+.vs-cancel-edit-btn { padding:8px 18px;border-radius:10px;border:2px solid #E5E7EB;background:white;color:#6B7280;font-family:'Fredoka One',cursive;font-size:0.9rem;cursor:pointer;transition:all 0.2s; }
+.vs-cancel-edit-btn:hover { border-color:#EF4444;color:#EF4444; }
+
+/* List footer */
+.vs-list-footer { display:flex;gap:10px;justify-content:flex-end;margin-top:12px;padding-top:12px;border-top:2px solid #F1F5F9; }
+.vs-reset-btn { padding:7px 16px;border-radius:10px;border:2px solid #BFDBFE;background:white;color:#2563EB;font-family:'Fredoka One',cursive;font-size:0.82rem;cursor:pointer;transition:all 0.2s; }
+.vs-reset-btn:hover { background:#EFF6FF; }
+.vs-clear-btn { padding:7px 16px;border-radius:10px;border:2px solid #FECDD3;background:white;color:#EF4444;font-family:'Fredoka One',cursive;font-size:0.82rem;cursor:pointer;transition:all 0.2s; }
+.vs-clear-btn:hover { background:#FFF1F2; }
+
+/* ── SETTINGS ── */
+.vs-settings-grid { display:grid;grid-template-columns:1fr 1fr;gap:12px; }
+.vs-setting-item { background:#EFF6FF;border-radius:14px;padding:12px;border:2px solid #BFDBFE; }
+.vs-setting-label { font-family:'Fredoka One',cursive;font-size:0.85rem;color:#1E1B4B;margin-bottom:7px; }
+.vs-setting-select, .vs-setting-input { width:100%;padding:8px 10px;border-radius:9px;border:2px solid #BFDBFE;font-family:'Nunito',sans-serif;font-size:0.88rem;outline:none;background:white;color:#1E1B4B; }
+
+/* ── TIPS ── */
+.vs-tips-grid { display:flex;flex-direction:column;gap:8px; }
+.vs-tip-row { display:grid;grid-template-columns:28px 1fr 1fr;gap:10px;align-items:center;padding:10px 14px;border-radius:12px;border:2px solid transparent; }
+.vs-tip-text { font-size:0.83rem;font-weight:800;color:#1E1B4B; }
+.vs-tip-example { font-size:0.78rem;color:#6B7280;font-style:italic; }
+
+/* ── SAVE ── */
+.vs-save-btn { width:100%;padding:17px;border:none;border-radius:18px;background:linear-gradient(135deg,#2563EB,#7C3AED);color:white;font-family:'Fredoka One',cursive;font-size:1.2rem;cursor:pointer;box-shadow:0 8px 28px rgba(37,99,235,0.35);transition:all 0.25s;animation:vs-pulse 2.5s ease-in-out infinite; }
+@keyframes vs-pulse { 0%,100%{box-shadow:0 8px 28px rgba(37,99,235,0.35);}50%{box-shadow:0 14px 40px rgba(37,99,235,0.55);} }
+.vs-save-btn:hover { transform:translateY(-3px); }
+.vs-save-btn:disabled { opacity:0.5;cursor:not-allowed;animation:none;transform:none; }
+.vs-save-warning { text-align:center;color:#EF4444;font-family:'Fredoka One',cursive;font-size:0.88rem;margin-top:10px; }
+
+/* ── RESPONSIVE ── */
+@media(max-width:600px) {
+  .vs-settings-grid { grid-template-columns:1fr; }
+  .vs-tip-row { grid-template-columns:28px 1fr; }
+  .vs-tip-example { display:none; }
+  .vs-add-row { flex-direction:column; }
+  .vs-topbar { padding:12px 16px; }
+  .vs-tb-title { display:none; }
+  .vs-edit-row { flex-direction:column; }
+}
+
+.vs-filter-tab { padding:6px 14px;border-radius:50px;border:2px solid #BFDBFE;background:white;color:#6B7280;font-family:'Fredoka One',cursive;font-size:0.8rem;cursor:pointer;transition:all 0.2s; }
+.vs-filter-tab:hover { border-color:#2563EB;color:#2563EB; }
+.vs-filter-tab.active { background:#2563EB;color:white;border-color:#2563EB; }
+.vs-filter-tabs { display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px; }

@@ -1,169 +1,241 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navbar from '../components/Navbar';
-import StarsBg from '../components/StarsBg';
-import '../styles/globals.css';
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  updateProfile,
+} from 'firebase/auth';
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '../firebase';
 import './Auth.css';
 
-function Auth() {
-  const [tab, setTab] = useState('login');
-  const [loginData, setLoginData]   = useState({ email:'', password:'' });
-  const [signupData, setSignupData] = useState({ firstName:'', lastName:'', email:'', password:'', childName:'', childAge:'' });
-  const [showLoginPass,  setShowLoginPass]  = useState(false);
-  const [showSignupPass, setShowSignupPass] = useState(false);
-  const [toast, setToast] = useState({ show:false, msg:'' });
+export default function Auth() {
   const navigate = useNavigate();
+  const [tab, setTab] = useState('login'); // 'login' | 'signup'
 
-  const showToast = (msg) => {
-    setToast({ show:true, msg });
-    setTimeout(() => setToast({ show:false, msg:'' }), 3000);
+  // ── LOGIN STATE ──
+  const [loginEmail,    setLoginEmail]    = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError,    setLoginError]    = useState('');
+  const [loginLoading,  setLoginLoading]  = useState(false);
+
+  // ── SIGNUP STATE ──
+  const [signupName,     setSignupName]     = useState('');
+  const [signupChild,    setSignupChild]    = useState('');
+  const [signupEmail,    setSignupEmail]    = useState('');
+  const [signupPassword, setSignupPassword] = useState('');
+  const [signupConfirm,  setSignupConfirm]  = useState('');
+  const [signupError,    setSignupError]    = useState('');
+  const [signupLoading,  setSignupLoading]  = useState(false);
+
+  // ── FRIENDLY ERROR MESSAGES ──
+  const friendlyError = (code) => {
+    switch(code) {
+      case 'auth/user-not-found':        return '❌ No account found with this email.';
+      case 'auth/wrong-password':        return '❌ Wrong password. Try again!';
+      case 'auth/invalid-credential':    return '❌ Wrong email or password. Try again!';
+      case 'auth/email-already-in-use':  return '❌ This email is already registered. Try logging in!';
+      case 'auth/weak-password':         return '❌ Password must be at least 6 characters.';
+      case 'auth/invalid-email':         return '❌ Please enter a valid email address.';
+      case 'auth/too-many-requests':     return '❌ Too many attempts. Please wait a moment.';
+      default:                           return '❌ Something went wrong. Please try again.';
+    }
   };
 
-  const handleLogin = (e) => {
+  // ── HANDLE LOGIN ──
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (!loginData.email || !loginData.password) { showToast('⚠️ Please fill in all fields!'); return; }
-    showToast('🎉 Welcome back!');
-    setTimeout(() => navigate('/home'), 1500);
+    if (!loginEmail || !loginPassword) {
+      setLoginError('❌ Please fill in both fields.');
+      return;
+    }
+    setLoginLoading(true);
+    setLoginError('');
+    try {
+      const userCred = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      // Fetch child name from Firestore and cache locally
+      try {
+        const snap = await getDoc(doc(db, 'users', userCred.user.uid));
+        if (snap.exists()) {
+          localStorage.setItem('pn_childName',  snap.data().childName  || '');
+          localStorage.setItem('pn_parentName', snap.data().parentName || '');
+        }
+      } catch(e) { /* silent fail */ }
+      // Login success → go to home page
+      navigate('/home');
+    } catch (err) {
+      setLoginError(friendlyError(err.code));
+      setLoginLoading(false);
+    }
   };
 
-  const handleSignup = (e) => {
+  // ── HANDLE SIGNUP ──
+  const handleSignup = async (e) => {
     e.preventDefault();
-    if (!signupData.email || !signupData.password || !signupData.firstName || !signupData.childName) { showToast('⚠️ Please fill in all fields!'); return; }
-    showToast('🌈 Account created! Welcome to PlayNest!');
-    setTimeout(() => navigate('/home'), 1500);
-  };
+    if (!signupName || !signupChild || !signupEmail || !signupPassword || !signupConfirm) {
+      setSignupError('❌ Please fill in all fields.');
+      return;
+    }
+    if (signupPassword !== signupConfirm) {
+      setSignupError('❌ Passwords do not match!');
+      return;
+    }
+    if (signupPassword.length < 6) {
+      setSignupError('❌ Password must be at least 6 characters.');
+      return;
+    }
+    setSignupLoading(true);
+    setSignupError('');
+    try {
+      // 1. Create the user in Firebase Auth
+      const userCred = await createUserWithEmailAndPassword(auth, signupEmail, signupPassword);
 
-  const panel = tab === 'login'
-    ? { emoji:'🎮', title:"Welcome Back to the Magic!", sub:"Login to continue your child's learning adventure." }
-    : { emoji:'🌟', title:"Start the Family Adventure!", sub:"Create your family account and start building magical games!" };
+      // 2. Save display name to Firebase Auth profile
+      await updateProfile(userCred.user, { displayName: signupName });
+
+      // 3. Save to Firestore
+      await setDoc(doc(db, 'users', userCred.user.uid), {
+        parentName: signupName,
+        childName:  signupChild,
+        email:      signupEmail,
+        createdAt:  new Date().toISOString(),
+      });
+
+      // 4. Also save to localStorage as backup
+      localStorage.setItem('pn_childName',  signupChild);
+      localStorage.setItem('pn_parentName', signupName);
+
+      // 5. Signup success → go to home page
+      navigate('/home');
+    } catch (err) {
+      setSignupError(friendlyError(err.code));
+      setSignupLoading(false);
+    }
+  };
 
   return (
     <div className="auth-page">
-      <StarsBg />
-      <div className="blob bl1"/><div className="blob bl2"/><div className="blob bl3"/>
-      <Navbar showBack={true} />
 
-      <div className="page-wrap">
-        <div className="auth-container">
+      {/* BACKGROUND */}
+      <div className="auth-bg">
+        {['🧩','✋','🎤','🌑','🕵️'].map((e, i) => (
+          <div key={i} className="auth-bubble" style={{
+            '--bf': `${4 + i}s`,
+            fontSize: '2rem',
+            top:  `${10 + i * 18}%`,
+            left: i % 2 === 0 ? `${5 + i * 3}%` : undefined,
+            right: i % 2 !== 0 ? `${5 + i * 2}%` : undefined,
+          }}>{e}</div>
+        ))}
+      </div>
 
-          {/* LEFT PANEL */}
-          <div className="left-panel">
-            <div className="fp-chars">
-              <span className="fc" style={{'--fa':'3.5s',top:'8%',left:'6%'}}>🌟</span>
-              <span className="fc" style={{'--fa':'4.5s',top:'15%',right:'8%'}}>🎈</span>
-              <span className="fc" style={{'--fa':'5s',bottom:'18%',left:'4%'}}>🦋</span>
-              <span className="fc" style={{'--fa':'3.8s',bottom:'12%',right:'6%'}}>🌈</span>
-            </div>
-            <span className="panel-emoji">{panel.emoji}</span>
-            <h2 className="panel-title">{panel.title}</h2>
-            <p className="panel-sub">{panel.sub}</p>
-            <ul className="panel-features">
-              <li>🧩 Personalized puzzle games</li>
-              <li>✋ AI hand gesture quizzes</li>
-              <li>🎤 Custom voice recognition</li>
-              <li>📊 Track your child's progress</li>
-            </ul>
+      <div className="auth-container">
+
+        {/* LEFT PANEL */}
+        <div className="auth-left">
+          <div className="auth-logo">✨ PlayNest</div>
+          <div className="auth-tagline">
+            {tab === 'login'
+              ? <>Welcome back! 🎉<br/>Ready to learn and play?</>
+              : <>Join PlayNest! 🚀<br/>Create your family account</>}
           </div>
-
-          {/* RIGHT PANEL */}
-          <div className="right-panel">
-            <div className="tab-switcher">
-              <button className={`tab-btn ${tab==='login'?'active':''}`}  onClick={()=>setTab('login')}>🔑 Login</button>
-              <button className={`tab-btn ${tab==='signup'?'active':''}`} onClick={()=>setTab('signup')}>🌟 Sign Up</button>
-            </div>
-
-            {tab === 'login' && (
-              <form className="form-panel" onSubmit={handleLogin}>
-                <div className="form-title">Hello Again! 👋</div>
-                <div className="form-sub">We missed you! Jump back into the fun.</div>
-                <div className="input-group">
-                  <label>📧 Email Address</label>
-                  <div className="input-wrap">
-                    <span className="input-icon">📧</span>
-                    <input type="email" placeholder="parent@example.com" value={loginData.email} onChange={e=>setLoginData({...loginData,email:e.target.value})}/>
-                  </div>
-                </div>
-                <div className="input-group">
-                  <label>🔒 Password</label>
-                  <div className="input-wrap">
-                    <span className="input-icon">🔒</span>
-                    <input type={showLoginPass?'text':'password'} placeholder="Your secret password" value={loginData.password} onChange={e=>setLoginData({...loginData,password:e.target.value})}/>
-                    <button type="button" className="pass-toggle" onClick={()=>setShowLoginPass(!showLoginPass)}>{showLoginPass?'🙈':'👁️'}</button>
-                  </div>
-                </div>
-                <div className="forgot-link"><a href="#">Forgot password?</a></div>
-                <button type="submit" className="submit-btn">🚀 Let's Play!</button>
-                <div className="or-divider">or</div>
-                <button type="button" className="google-btn">
-                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google"/> Continue with Google
-                </button>
-                <p className="switch-text">Don't have an account? <span onClick={()=>setTab('signup')}>Sign up free →</span></p>
-              </form>
-            )}
-
-            {tab === 'signup' && (
-              <form className="form-panel" onSubmit={handleSignup}>
-                <div className="form-title">Join the Adventure! 🌟</div>
-                <div className="form-sub">Create your family account in just a minute!</div>
-                <div className="form-section-label">👨‍👩‍👧 Parent Details</div>
-                <div className="two-col">
-                  <div className="input-group">
-                    <label>First Name</label>
-                    <div className="input-wrap"><span className="input-icon">👤</span>
-                      <input type="text" placeholder="e.g. Priya" value={signupData.firstName} onChange={e=>setSignupData({...signupData,firstName:e.target.value})}/>
-                    </div>
-                  </div>
-                  <div className="input-group">
-                    <label>Last Name</label>
-                    <div className="input-wrap"><span className="input-icon">👤</span>
-                      <input type="text" placeholder="e.g. Sharma" value={signupData.lastName} onChange={e=>setSignupData({...signupData,lastName:e.target.value})}/>
-                    </div>
-                  </div>
-                </div>
-                <div className="input-group">
-                  <label>📧 Email Address</label>
-                  <div className="input-wrap"><span className="input-icon">📧</span>
-                    <input type="email" placeholder="parent@example.com" value={signupData.email} onChange={e=>setSignupData({...signupData,email:e.target.value})}/>
-                  </div>
-                </div>
-                <div className="input-group">
-                  <label>🔒 Password</label>
-                  <div className="input-wrap"><span className="input-icon">🔒</span>
-                    <input type={showSignupPass?'text':'password'} placeholder="Create a strong password" value={signupData.password} onChange={e=>setSignupData({...signupData,password:e.target.value})}/>
-                    <button type="button" className="pass-toggle" onClick={()=>setShowSignupPass(!showSignupPass)}>{showSignupPass?'🙈':'👁️'}</button>
-                  </div>
-                </div>
-                <div className="form-section-label">🧒 Child Details</div>
-                <div className="two-col">
-                  <div className="input-group">
-                    <label>Child's Name</label>
-                    <div className="input-wrap"><span className="input-icon">🧒</span>
-                      <input type="text" placeholder="e.g. Arjun" value={signupData.childName} onChange={e=>setSignupData({...signupData,childName:e.target.value})}/>
-                    </div>
-                  </div>
-                  <div className="input-group">
-                    <label>Child's Age</label>
-                    <div className="input-wrap"><span className="input-icon">🎂</span>
-                      <select className="age-select" value={signupData.childAge} onChange={e=>setSignupData({...signupData,childAge:e.target.value})}>
-                        <option value="">Select age</option>
-                        {[2,3,4,5,6,7,8,9,10].map(a=><option key={a}>{a} years</option>)}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                <button type="submit" className="submit-btn">🌈 Create My Family Account!</button>
-                <div className="or-divider">or</div>
-                <button type="button" className="google-btn">
-                  <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="22" alt="Google"/> Sign up with Google
-                </button>
-                <p className="terms-text">By signing up you agree to our <a href="#">Terms</a> &amp; <a href="#">Privacy Policy</a></p>
-              </form>
-            )}
+          <div className="auth-features">
+            {['🧩 Picture Puzzle', '✋ Hand Gesture MCQ', '🌑 Shadow Match', '🕵️ Photo Mystery', '🎤 Voice Recognition'].map(f => (
+              <div key={f} className="auth-feature-item">{f}</div>
+            ))}
           </div>
         </div>
+
+        {/* RIGHT PANEL */}
+        <div className="auth-right">
+
+          {/* TABS */}
+          <div className="auth-tabs">
+            <button className={`auth-tab ${tab==='login'?'active':''}`} onClick={() => {setTab('login'); setLoginError('');}}>
+              🔑 Login
+            </button>
+            <button className={`auth-tab ${tab==='signup'?'active':''}`} onClick={() => {setTab('signup'); setSignupError('');}}>
+              ✨ Sign Up
+            </button>
+          </div>
+
+          {/* ── LOGIN FORM ── */}
+          {tab === 'login' && (
+            <form className="auth-form" onSubmit={handleLogin}>
+              <div className="auth-form-title">Welcome back! 👋</div>
+              <div className="auth-form-sub">Login to your PlayNest account</div>
+
+              <div className="auth-field">
+                <label>📧 Email</label>
+                <input type="email" placeholder="your@email.com"
+                  value={loginEmail} onChange={e => setLoginEmail(e.target.value)}/>
+              </div>
+              <div className="auth-field">
+                <label>🔒 Password</label>
+                <input type="password" placeholder="Enter your password"
+                  value={loginPassword} onChange={e => setLoginPassword(e.target.value)}/>
+              </div>
+
+              {loginError && <div className="auth-error">{loginError}</div>}
+
+              <button type="submit" className="auth-submit" disabled={loginLoading}>
+                {loginLoading ? '⏳ Logging in...' : '🚀 Login'}
+              </button>
+
+              <div className="auth-switch">
+                Don't have an account?{' '}
+                <button type="button" onClick={() => setTab('signup')}>Sign Up</button>
+              </div>
+            </form>
+          )}
+
+          {/* ── SIGNUP FORM ── */}
+          {tab === 'signup' && (
+            <form className="auth-form" onSubmit={handleSignup}>
+              <div className="auth-form-title">Create Account 🎉</div>
+              <div className="auth-form-sub">Join PlayNest for free!</div>
+
+              <div className="auth-field">
+                <label>👨‍👩‍👦 Your Name (Parent)</label>
+                <input type="text" placeholder="e.g. Priya"
+                  value={signupName} onChange={e => setSignupName(e.target.value)}/>
+              </div>
+              <div className="auth-field">
+                <label>🧒 Child's Name</label>
+                <input type="text" placeholder="e.g. Arjun"
+                  value={signupChild} onChange={e => setSignupChild(e.target.value)}/>
+              </div>
+              <div className="auth-field">
+                <label>📧 Email</label>
+                <input type="email" placeholder="your@email.com"
+                  value={signupEmail} onChange={e => setSignupEmail(e.target.value)}/>
+              </div>
+              <div className="auth-field">
+                <label>🔒 Password</label>
+                <input type="password" placeholder="Min. 6 characters"
+                  value={signupPassword} onChange={e => setSignupPassword(e.target.value)}/>
+              </div>
+              <div className="auth-field">
+                <label>🔒 Confirm Password</label>
+                <input type="password" placeholder="Repeat password"
+                  value={signupConfirm} onChange={e => setSignupConfirm(e.target.value)}/>
+              </div>
+
+              {signupError && <div className="auth-error">{signupError}</div>}
+
+              <button type="submit" className="auth-submit" disabled={signupLoading}>
+                {signupLoading ? '⏳ Creating account...' : '✨ Create Account'}
+              </button>
+
+              <div className="auth-switch">
+                Already have an account?{' '}
+                <button type="button" onClick={() => setTab('login')}>Login</button>
+              </div>
+            </form>
+          )}
+
+        </div>
       </div>
-      <div className={`toast ${toast.show?'show':''}`}>{toast.msg}</div>
     </div>
   );
 }
-export default Auth;
