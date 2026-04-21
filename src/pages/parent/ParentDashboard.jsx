@@ -41,8 +41,8 @@ const GAMES = [
     desc: 'Show a blurry photo — can your child guess what it is?',
     color: '#EC4899',
     light: '#FDF2F8',
-    setupPath: null,
-    ready: false,
+    setupPath: '/parent/setup/mystery',
+  ready: true,
   },
   {
     id: 5,

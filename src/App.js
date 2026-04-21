@@ -19,6 +19,9 @@ import VoiceSetup from './pages/parent/VoiceSetup'
 import VoiceGame  from './pages/voice/VoiceGame'
 import ShadowSetup from './pages/parent/ShadowSetup'
 import ShadowGame  from './pages/shadow/ShadowGame'
+import PhotoMysterySetup from './pages/parent/PhotoMysterySetup'
+import PhotoMysteryGame  from './pages/mystery/PhotoMysteryGame'
+
 
 function App() {
   return (
@@ -56,6 +59,8 @@ function App() {
 <Route path="/child/play/voice"    element={<ProtectedRoute><VoiceGame  /></ProtectedRoute>} />
 <Route path="/parent/setup/shadow" element={<ProtectedRoute><ShadowSetup /></ProtectedRoute>} />
 <Route path="/child/play/shadow"   element={<ProtectedRoute><ShadowGame  /></ProtectedRoute>} />
+<Route path="/parent/setup/mystery" element={<ProtectedRoute><PhotoMysterySetup /></ProtectedRoute>} />
+<Route path="/child/play/mystery"   element={<ProtectedRoute><PhotoMysteryGame  /></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>

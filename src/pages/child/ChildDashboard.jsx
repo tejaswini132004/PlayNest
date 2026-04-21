@@ -35,7 +35,7 @@ const GAMES = [
     stars: 5,
     plays: 15,
     isNew: false,
-    path: '/child/play/photo',
+    path: '/child/play/mystery',
     wide: false,
   },
   {
