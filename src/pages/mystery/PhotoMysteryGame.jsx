@@ -58,8 +58,21 @@ export default function PhotoMysteryGame() {
 
   const revealTimerRef   = useRef(null);
   const confettiRef      = useRef(null);
-  const guessInputRef    = useRef(null);
+  const recognitionRef   = useRef(null);
   const initializedRef   = useRef(false);
+  const currentIdxRef    = useRef(0);   // ref to avoid stale closure in setTimeout
+  const queueRef         = useRef([]);  // ref so goNext always has latest queue
+
+  // ── MIC STATE ──
+  const [micMode,      setMicMode]      = useState('idle'); // idle | listening | processing
+  const [spokenText,   setSpokenText]   = useState('');
+  const [micSupported, setMicSupported] = useState(true);
+
+  // Check browser support
+  useEffect(() => {
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) setMicSupported(false);
+  }, []);
 
   // ── BLUR: goes from blurLevels (most blurry) down to 0 (clear) ──
   // blurPx = blurStep 0 → 40px, blurStep max → 0px
@@ -80,6 +93,8 @@ export default function PhotoMysteryGame() {
     setShowWin(false);
     setRevealed(false);
     setGameStarted(true);
+    currentIdxRef.current = 0;
+    queueRef.current = q;
     clearInterval(revealTimerRef.current);
     setTimeout(() => {
       speak(`Can you guess what this is? Here is your hint: ${q[0]?.hint}`);
@@ -105,7 +120,8 @@ export default function PhotoMysteryGame() {
           setRevealed(true);
           setResult('revealed');
           setResultMsg('Time is up! The answer was...');
-          speak(`Time is up! The answer was ${queue[currentIdx]?.answer}`);
+          const curQ = queueRef.current[currentIdxRef.current];
+          if (curQ) speak(`Time is up! The answer was ${curQ.answer}`);
           return blurLevels;
         }
         return prev + 1;
@@ -115,11 +131,12 @@ export default function PhotoMysteryGame() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentIdx, gameStarted, result]);
 
-  // ── SUBMIT GUESS ──
-  const submitGuess = () => {
-    if (!guess.trim() || result) return;
-    const current = queue[currentIdx];
-    if (isCorrect(guess, current.answer)) {
+  // ── CHECK ANSWER (called from mic result) ──
+  const checkAnswer = (spokenAnswer) => {
+    const curIdx = currentIdxRef.current;
+    const curQ   = queueRef.current[curIdx];
+    if (!curQ) return;
+    if (isCorrect(spokenAnswer, curQ.answer)) {
       clearInterval(revealTimerRef.current);
       setResult('correct');
       setResultMsg('🎉 Correct! Well done!');
@@ -127,44 +144,93 @@ export default function PhotoMysteryGame() {
       launchMiniConfetti();
       speak('Correct! Well done!');
       setRevealed(true);
-      setBlurStep(blurLevels); // fully reveal on correct
-      // Auto next after 2.5 seconds
-      setTimeout(goNext, 2500);
+      setBlurStep(blurLevels);
+      // Auto-next after 2 seconds — pass next index directly to avoid stale closure
+      setTimeout(() => goNextFromIdx(curIdx + 1), 2000);
     } else {
       setResult('wrong');
-      setResultMsg(`Not quite! Try again 😊`);
+      setResultMsg(`You said "${spokenAnswer}" — try again!`);
       setWrong(w => w + 1);
       speak('Try again!');
       setTimeout(() => {
         setResult(null);
         setResultMsg('');
-        setGuess('');
-        guessInputRef.current?.focus();
-      }, 1200);
+        setSpokenText('');
+        setMicMode('idle');
+      }, 1500);
     }
   };
 
-  // ── SKIP / NEXT ──
-  const goNext = () => {
+  // ── START MIC LISTENING ──
+  const startListening = () => {
+    if (!micSupported || result === 'correct' || revealed) return;
+    const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SR) return;
+    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch(e) {} }
+
+    const rec = new SR();
+    rec.lang = 'en-US';
+    rec.continuous = false;
+    rec.interimResults = true;
+
+    rec.onstart = () => { setMicMode('listening'); setSpokenText(''); };
+
+    rec.onresult = (event) => {
+      const transcript = Array.from(event.results).map(r => r[0].transcript).join('');
+      setSpokenText(transcript);
+      if (event.results[event.results.length - 1].isFinal) {
+        setMicMode('processing');
+        checkAnswer(transcript.toLowerCase().trim());
+      }
+    };
+
+    rec.onerror = (e) => {
+      setMicMode('idle');
+      if (e.error === 'not-allowed') alert('Please allow microphone access!');
+    };
+
+    rec.onend = () => { if (micMode === 'listening') setMicMode('idle'); };
+
+    recognitionRef.current = rec;
+    rec.start();
+  };
+
+  const stopListening = () => {
+    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch(e) {} }
+    setMicMode('idle');
+  };
+
+  const handleMicBtn = () => {
+    if (micMode === 'listening') stopListening();
+    else startListening();
+  };
+
+  // ── GO TO SPECIFIC INDEX (avoids stale closure) ──
+  const goNextFromIdx = (next) => {
     clearInterval(revealTimerRef.current);
-    const next = currentIdx + 1;
-    if (next >= queue.length) {
+    if (next >= queueRef.current.length) {
       setShowWin(true);
       launchConfetti();
-      speak(`Amazing ${childName}! You solved all the mysteries!`);
+      speak(`Amazing! You solved all the mysteries!`);
     } else {
+      currentIdxRef.current = next;
       setCurrentIdx(next);
       setBlurStep(0);
       setGuess('');
+      setSpokenText('');
+      setMicMode('idle');
       setResult(null);
       setResultMsg('');
       setRevealed(false);
       setTimeout(() => {
-        speak(`Next mystery! Here is your hint: ${queue[next]?.hint}`);
-        guessInputRef.current?.focus();
+        const nextQ = queueRef.current[next];
+        if (nextQ) speak(`Next mystery! Here is your hint: ${nextQ.hint}`);
       }, 400);
     }
   };
+
+  // ── SKIP / NEXT (called from Next button) ──
+  const goNext = () => goNextFromIdx(currentIdxRef.current + 1);
 
   // ── REVEAL HINT (gives one more step) ──
   const revealMore = () => {
@@ -289,25 +355,40 @@ export default function PhotoMysteryGame() {
               )}
             </div>
 
-            {/* GUESS INPUT */}
+            {/* MIC GUESS */}
             <div className="pm-side-card">
-              <div className="pm-side-title">🤔 Your Guess</div>
-              <input
-                ref={guessInputRef}
-                className="pm-guess-input"
-                value={guess}
-                onChange={e => setGuess(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && submitGuess()}
-                placeholder="Type your guess..."
-                disabled={result === 'correct' || revealed}
-              />
-              <button
-                className="pm-guess-btn"
-                onClick={submitGuess}
-                disabled={!guess.trim() || result === 'correct' || revealed}
+              <div className="pm-side-title">🎤 Speak Your Guess!</div>
+
+              {/* BIG MIC BUTTON */}
+              <div
+                className={`pm-mic-btn ${micMode} ${(result === 'correct' || revealed) ? 'disabled' : ''}`}
+                onClick={handleMicBtn}
               >
-                ✅ Submit Guess!
-              </button>
+                <div className="pm-mic-icon">
+                  {micMode === 'listening'  ? '🔴' :
+                   micMode === 'processing' ? '⏳' : '🎤'}
+                </div>
+                <div className="pm-mic-label">
+                  {micMode === 'listening'  ? 'Listening... tap to stop' :
+                   micMode === 'processing' ? 'Checking...' :
+                   result === 'correct' || revealed ? 'Answered!' :
+                   'Tap & Speak!'}
+                </div>
+                {micMode === 'listening' && (
+                  <>
+                    <div className="pm-pulse-ring pm-ring-1"/>
+                    <div className="pm-pulse-ring pm-ring-2"/>
+                  </>
+                )}
+              </div>
+
+              {/* Live transcript */}
+              {spokenText && (
+                <div className="pm-transcript">
+                  <span className="pm-transcript-label">I heard: </span>
+                  <span className="pm-transcript-text">"{spokenText}"</span>
+                </div>
+              )}
 
               {/* Result flash */}
               {result && (
