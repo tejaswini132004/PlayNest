@@ -1,0 +1,14 @@
+.stars-bg {
+  position: fixed; top:0; left:0;
+  width:100%; height:100%;
+  pointer-events:none; z-index:0; overflow:hidden;
+}
+.star {
+  position:absolute; border-radius:50%;
+  animation: twinkle var(--dur,3s) ease-in-out infinite alternate;
+  opacity:0.45;
+}
+@keyframes twinkle {
+  from { transform:scale(1) rotate(0deg); opacity:0.25; }
+  to   { transform:scale(1.7) rotate(180deg); opacity:0.85; }
+}

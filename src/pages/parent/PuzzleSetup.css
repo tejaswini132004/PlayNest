@@ -1,0 +1,85 @@
+.ps-page { min-height:100vh; background:linear-gradient(160deg,#F5F3FF,#FDF2F8,#FFF7ED); font-family:'Nunito',sans-serif; }
+
+.ps-topbar { position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(255,255,255,0.88);backdrop-filter:blur(12px);border-bottom:3px solid #EDE9FE;box-shadow:0 4px 20px rgba(124,58,237,0.08); }
+.ps-logo { font-family:'Fredoka One',cursive;font-size:1.5rem;color:#7C3AED; }
+.ps-logo span { color:#FB923C; }
+.ps-tb-title { font-family:'Fredoka One',cursive;font-size:1.2rem;color:#1E1B4B; }
+.ps-back-btn { padding:8px 18px;border-radius:50px;border:none;background:rgba(124,58,237,0.1);color:#7C3AED;font-family:'Fredoka One',cursive;font-size:0.9rem;cursor:pointer;transition:all 0.2s; }
+.ps-back-btn:hover { background:#7C3AED;color:white; }
+
+.ps-content { max-width:680px;margin:0 auto;padding:28px 20px 60px;display:flex;flex-direction:column;gap:22px; }
+
+.ps-card { background:white;border-radius:28px;padding:32px;box-shadow:0 6px 28px rgba(124,58,237,0.08);border:2px solid #F3F0FF;animation:ps-card-in 0.5s ease both; }
+@keyframes ps-card-in { from{opacity:0;transform:translateY(20px);}to{opacity:1;transform:translateY(0);} }
+
+.ps-step-header { display:flex;align-items:center;gap:14px;margin-bottom:22px; }
+.ps-step-num { width:42px;height:42px;border-radius:50%;background:linear-gradient(135deg,#7C3AED,#F472B6);color:white;font-family:'Fredoka One',cursive;font-size:1.2rem;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-shadow:0 4px 12px rgba(124,58,237,0.3); }
+.ps-step-title { font-family:'Fredoka One',cursive;font-size:1.3rem;color:#1E1B4B; }
+.ps-step-sub { font-size:0.85rem;color:#9CA3AF;font-weight:700;margin-top:2px; }
+
+.ps-upload-zone { border:3px dashed #C4B5FD;border-radius:20px;padding:44px 20px;text-align:center;background:#FAFAFA;cursor:pointer;transition:all 0.25s; }
+.ps-upload-zone:hover, .ps-upload-zone.drag-over { border-color:#7C3AED;background:#F5F3FF;transform:scale(1.01); }
+.ps-upload-icon { font-size:3.5rem;margin-bottom:12px;animation:ps-bounce 2s ease-in-out infinite; }
+@keyframes ps-bounce { 0%,100%{transform:translateY(0);}50%{transform:translateY(-8px);} }
+.ps-upload-title { font-family:'Fredoka One',cursive;font-size:1.3rem;color:#7C3AED;margin-bottom:6px; }
+.ps-upload-sub { font-size:0.85rem;color:#9CA3AF;font-weight:700; }
+
+.ps-preview { display:flex;flex-direction:column;align-items:center;gap:12px; }
+.ps-preview-img { width:100%;max-height:260px;object-fit:cover;border-radius:16px;border:3px solid #EDE9FE; }
+.ps-change-btn { padding:10px 28px;border-radius:50px;border:2.5px solid #EDE9FE;background:white;color:#7C3AED;font-family:'Fredoka One',cursive;font-size:0.95rem;cursor:pointer;transition:all 0.2s; }
+.ps-change-btn:hover { border-color:#7C3AED;background:#F5F3FF; }
+
+.ps-diff-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:14px; }
+.ps-diff-card { border-radius:20px;padding:22px 14px;text-align:center;border:3px solid #F3F0FF;background:white;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden; }
+.ps-diff-card::before { content:'';position:absolute;top:0;left:0;right:0;height:5px;background:var(--dc);border-radius:20px 20px 0 0; }
+.ps-diff-card:hover { transform:translateY(-4px);border-color:var(--dc); }
+.ps-diff-card.selected { border-color:var(--dc);background:var(--dl); }
+.ps-diff-check { position:absolute;top:10px;right:10px;width:24px;height:24px;border-radius:50%;background:var(--dc);color:white;font-size:0.8rem;display:flex;align-items:center;justify-content:center; }
+.ps-diff-emoji { font-size:2.5rem;margin-bottom:10px; }
+.ps-diff-label { font-family:'Fredoka One',cursive;font-size:1.1rem;color:#1E1B4B;margin-bottom:4px; }
+.ps-diff-desc { font-size:0.78rem;color:#9CA3AF;font-weight:700; }
+
+.ps-save-btn { width:100%;padding:18px;border:none;border-radius:20px;background:linear-gradient(135deg,#7C3AED,#F472B6);color:white;font-family:'Fredoka One',cursive;font-size:1.3rem;cursor:pointer;box-shadow:0 8px 28px rgba(124,58,237,0.35);transition:all 0.25s;animation:ps-pulse 2.5s ease-in-out infinite; }
+@keyframes ps-pulse { 0%,100%{box-shadow:0 8px 28px rgba(124,58,237,0.35);}50%{box-shadow:0 14px 40px rgba(124,58,237,0.55);} }
+.ps-save-btn:hover { transform:translateY(-3px); }
+.ps-save-btn:disabled { opacity:0.7;cursor:not-allowed;animation:none; }
+
+/* ── FIREBASE PHOTOS GRID ── */
+.ps-photos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 12px;
+}
+.ps-saved-photo {
+  position: relative;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 2px solid #EDE9FE;
+  background: #F5F3FF;
+}
+.ps-saved-thumb {
+  width: 100%;
+  aspect-ratio: 1;
+  object-fit: cover;
+  display: block;
+}
+.ps-del-photo {
+  position: absolute;
+  top: 6px; right: 6px;
+  background: rgba(0,0,0,0.6);
+  border: none;
+  border-radius: 50%;
+  width: 28px; height: 28px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s;
+}
+.ps-del-photo:hover { background: #EF4444; }
+.ps-photo-label {
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.75rem;
+  color: #7C3AED;
+  text-align: center;
+  padding: 4px;
+}

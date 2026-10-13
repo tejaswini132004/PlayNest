@@ -1,0 +1,137 @@
+.pd-page { min-height:100vh; background:linear-gradient(160deg,#F5F3FF,#FDF2F8,#FFF7ED); font-family:'Nunito',sans-serif; }
+
+/* TOPBAR */
+.pd-topbar { position:sticky;top:0;z-index:50;display:flex;align-items:center;justify-content:space-between;padding:14px 32px;background:rgba(255,255,255,0.88);backdrop-filter:blur(12px);border-bottom:3px solid #EDE9FE;box-shadow:0 4px 20px rgba(124,58,237,0.08); }
+.pd-logo { font-family:'Fredoka One',cursive;font-size:1.5rem;color:#7C3AED; }
+.pd-logo span { color:#FB923C; }
+.pd-tb-center { font-family:'Fredoka One',cursive;font-size:1.2rem;color:#1E1B4B; }
+.pd-tb-btn { padding:8px 18px;border-radius:50px;border:none;background:rgba(124,58,237,0.1);color:#7C3AED;font-family:'Fredoka One',cursive;font-size:0.9rem;cursor:pointer;transition:all 0.2s; }
+.pd-tb-btn:hover { background:#7C3AED;color:white; }
+
+/* BANNER */
+.pd-banner { margin:24px 32px 0;background:linear-gradient(135deg,#7C3AED,#F472B6);border-radius:28px;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;box-shadow:0 8px 32px rgba(124,58,237,0.3);flex-wrap:wrap;gap:20px; }
+.pd-banner-content { display:flex;align-items:center;gap:18px; }
+.pd-banner-avatar { font-size:3rem;background:rgba(255,255,255,0.2);border-radius:50%;width:72px;height:72px;display:flex;align-items:center;justify-content:center; }
+.pd-banner-title { font-family:'Fredoka One',cursive;font-size:1.6rem;color:white;margin-bottom:4px; }
+.pd-banner-sub { color:rgba(255,255,255,0.85);font-size:0.95rem;font-weight:700; }
+.pd-banner-sub strong { color:#FBBF24; }
+.pd-banner-stats { display:flex;gap:20px; }
+.pd-stat { background:rgba(255,255,255,0.2);border-radius:16px;padding:12px 22px;text-align:center; }
+.pd-stat-num { display:block;font-family:'Fredoka One',cursive;font-size:1.8rem;color:white; }
+.pd-stat-label { font-size:0.78rem;color:rgba(255,255,255,0.8);font-weight:700;text-transform:uppercase;letter-spacing:0.5px; }
+
+/* TABS */
+.pd-tabs-wrap { display:flex;justify-content:center;padding:24px 0 0; }
+.pd-tabs { display:flex;background:#EDE9FE;border-radius:50px;padding:4px;gap:0; }
+.pd-tab { padding:10px 32px;border:none;background:transparent;font-family:'Fredoka One',cursive;font-size:1rem;color:#9CA3AF;border-radius:50px;cursor:pointer;transition:all 0.25s; }
+.pd-tab.active { background:linear-gradient(135deg,#7C3AED,#F472B6);color:white;box-shadow:0 4px 14px rgba(124,58,237,0.3); }
+
+/* CONTENT */
+.pd-content { max-width:1000px;margin:0 auto;padding:24px 24px 60px; }
+
+/* GAMES GRID */
+.pd-games-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:20px; }
+.pd-game-card {
+  background:white;border-radius:24px;padding:24px;
+  box-shadow:0 4px 20px rgba(124,58,237,0.08);
+  border:2px solid var(--gl);
+  transition:all 0.25s;
+  animation:card-in 0.5s ease both;
+  border-top:5px solid var(--gc);
+}
+@keyframes card-in { from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);} }
+.pd-game-card:hover { transform:translateY(-5px);box-shadow:0 12px 36px rgba(124,58,237,0.14); }
+
+.pd-game-top { display:flex;align-items:center;justify-content:space-between;margin-bottom:14px; }
+.pd-game-emoji { font-size:2.8rem;background:var(--gl);border-radius:16px;width:60px;height:60px;display:flex;align-items:center;justify-content:center; }
+.pd-game-badge { font-size:0.75rem;font-weight:800;padding:5px 12px;border-radius:50px; }
+.pd-game-badge.ready { background:#D1FAE5;color:#065F46; }
+.pd-game-badge.coming { background:#FEF3C7;color:#92400E; }
+.pd-game-title { font-family:'Fredoka One',cursive;font-size:1.2rem;color:#1E1B4B;margin-bottom:8px; }
+.pd-game-desc { font-size:0.85rem;color:#6B7280;font-weight:600;line-height:1.5;margin-bottom:18px; }
+.pd-game-actions { display:flex;gap:10px; }
+.pd-btn-edit {
+  flex:1;padding:10px;border:none;border-radius:12px;
+  background:linear-gradient(135deg,var(--gc),#F472B6);
+  color:white;font-family:'Fredoka One',cursive;font-size:0.9rem;
+  cursor:pointer;transition:all 0.2s;
+}
+.pd-btn-edit:hover { transform:translateY(-2px); }
+.pd-btn-edit:disabled { opacity:0.4;cursor:not-allowed;transform:none; }
+.pd-btn-preview {
+  padding:10px 14px;border-radius:12px;border:2.5px solid #EDE9FE;
+  background:white;font-family:'Fredoka One',cursive;font-size:0.9rem;
+  color:var(--gc);cursor:pointer;transition:all 0.2s;
+}
+.pd-btn-preview:hover { border-color:var(--gc);background:var(--gl); }
+.pd-btn-preview:disabled { opacity:0.4;cursor:not-allowed; }
+
+/* PROGRESS */
+.pd-progress-section { display:flex;flex-direction:column;gap:20px; }
+.pd-prog-card { background:white;border-radius:24px;padding:28px;box-shadow:0 4px 20px rgba(124,58,237,0.08);border:2px solid #F3F0FF; }
+.pd-prog-card-title { font-family:'Fredoka One',cursive;font-size:1.2rem;color:#1E1B4B;margin-bottom:18px; }
+.pd-prog-rows { display:flex;flex-direction:column;gap:14px; }
+.pd-prog-row { display:flex;align-items:center;gap:14px;padding:12px 16px;background:#FAFAFA;border-radius:14px;border:2px solid #F3F0FF; }
+.pd-prog-row-emoji { font-size:1.6rem;width:36px; }
+.pd-prog-row-name { flex:1;font-family:'Fredoka One',cursive;font-size:0.95rem;color:#1E1B4B; }
+.pd-prog-row-stars { font-size:0.9rem; }
+.pd-prog-row-plays { font-size:0.8rem;color:#9CA3AF;font-weight:700; }
+.pd-achievements { display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:14px; }
+.pd-ach-badge { padding:18px;border-radius:18px;text-align:center;border:2px solid #EDE9FE;transition:all 0.2s; }
+.pd-ach-badge.earned { background:linear-gradient(135deg,#F0FDF4,#DCFCE7);border-color:#86EFAC; }
+.pd-ach-badge.locked { background:#F9FAFB;opacity:0.6; }
+.pd-ach-badge:hover { transform:translateY(-3px); }
+.pd-ach-icon { font-size:2rem;margin-bottom:8px; }
+.pd-ach-name { font-family:'Fredoka One',cursive;font-size:0.95rem;color:#1E1B4B;margin-bottom:4px; }
+.pd-ach-desc { font-size:0.78rem;color:#6B7280;font-weight:600;margin-bottom:8px; }
+.pd-ach-status { font-size:0.78rem;font-weight:800; }
+.pd-ach-badge.earned .pd-ach-status { color:#059669; }
+.pd-ach-badge.locked .pd-ach-status { color:#9CA3AF; }
+
+@media(max-width:600px) { .pd-banner{margin:16px;padding:20px;} .pd-banner-stats{display:none;} .pd-games-grid{grid-template-columns:1fr;} }
+
+/* ── PUZZLE PHOTO PREVIEW IN CARD ── */
+.pd-puzzle-preview {
+  margin: 10px 0 14px;
+  border-radius: 14px;
+  overflow: hidden;
+}
+.pd-puzzle-saved {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #F0FDF4;
+  border: 2px solid #86EFAC;
+  border-radius: 14px;
+  padding: 10px;
+}
+.pd-puzzle-thumb {
+  width: 70px;
+  height: 70px;
+  object-fit: cover;
+  border-radius: 10px;
+  border: 2px solid #34D399;
+  flex-shrink: 0;
+}
+.pd-puzzle-info-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 0.9rem;
+  color: #065F46;
+  margin-bottom: 2px;
+}
+.pd-puzzle-info-sub {
+  font-size: 0.78rem;
+  color: #6B7280;
+  font-weight: 700;
+  margin-top: 2px;
+}
+.pd-puzzle-empty {
+  background: #FFF7ED;
+  border: 2px dashed #FCD34D;
+  border-radius: 14px;
+  padding: 10px 14px;
+  font-size: 0.82rem;
+  color: #92400E;
+  font-weight: 700;
+  text-align: center;
+}
