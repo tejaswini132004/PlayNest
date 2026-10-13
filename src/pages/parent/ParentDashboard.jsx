@@ -54,6 +54,17 @@ const GAMES = [
     setupPath: '/parent/setup/voice',   // ← add this
   ready: true, 
   },
+    {
+    id: 6,
+    emoji: '😊',
+    title: 'Emotion Mirror',
+    desc: 'Record yourself making faces — child mimics them on camera!',
+    color: '#DB2777',
+    light: '#FDF2F8',
+    setupPath: '/parent/setup/emotion',
+    ready: true,
+  },
+  
 ];
 
 export default function ParentDashboard() {

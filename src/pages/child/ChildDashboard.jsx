@@ -60,6 +60,39 @@ const GAMES = [
     path: '/child/play/voice',
     wide: true, // spans full width
   },
+    {
+    id: 6,
+    emoji: '😊',
+    title: 'Emotion Mirror',
+    bg: 'linear-gradient(145deg,#DB2777,#F472B6)',
+    stars: 0,
+    plays: 0,
+    isNew: true,
+    path: '/child/play/emotion',
+    wide: false,
+  },
+  {
+    id: 7,
+    emoji: '🎨',
+    title: 'Draw & Guess',
+    bg: 'linear-gradient(145deg,#0EA5E9,#38BDF8)',
+    stars: 0,
+    plays: 0,
+    isNew: true,
+    path: '/child/play/draw',
+    wide: false,
+  },
+  {
+    id: 8,
+    emoji: '🔊',
+    title: 'Sound Match',
+    bg: 'linear-gradient(145deg,#16A34A,#4ADE80)',
+    stars: 0,
+    plays: 0,
+    isNew: true,
+    path: '/child/play/soundmatch',
+    wide: false,
+  },
 ];
 
 const ACHIEVEMENTS = [
@@ -68,7 +101,8 @@ const ACHIEVEMENTS = [
   { icon:'🎤', bg:'#DCFCE7', name:'Voice Champion!', desc:'10 correct voice answers', earned: true  },
   { icon:'🌟', bg:'#F3F4F6', name:'Super Star!',     desc:'Play all 5 games',         earned: false },
   { icon:'🏆', bg:'#F3F4F6', name:'Champion!',       desc:'Get 5 stars on all games', earned: false },
-  { icon:'🕵️', bg:'#FFF0FB', name:'Detective!',      desc:'Guessed 5 photo mysteries',earned: true  },
+  { icon:'🕵️', bg:'#FFF0FB', name:'Detective!',      desc:'Guessed 5 photo mysteries',earned: true  }, 
+  
 ];
 
 // Render star rating

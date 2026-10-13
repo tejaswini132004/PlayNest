@@ -21,7 +21,10 @@ import ShadowSetup from './pages/parent/ShadowSetup'
 import ShadowGame  from './pages/shadow/ShadowGame'
 import PhotoMysterySetup from './pages/parent/PhotoMysterySetup'
 import PhotoMysteryGame  from './pages/mystery/PhotoMysteryGame'
-
+import EmotionMirrorSetup from './pages/parent/EmotionMirrorSetup'; 
+import EmotionMirrorGame from './pages/emotion/EmotionMirrorGame';
+import DrawGame from './pages/draw/DrawGame';
+import SoundMatchGame from './pages/soundmatch/SoundMatchGame';
 
 function App() {
   return (
@@ -61,6 +64,11 @@ function App() {
 <Route path="/child/play/shadow"   element={<ProtectedRoute><ShadowGame  /></ProtectedRoute>} />
 <Route path="/parent/setup/mystery" element={<ProtectedRoute><PhotoMysterySetup /></ProtectedRoute>} />
 <Route path="/child/play/mystery"   element={<ProtectedRoute><PhotoMysteryGame  /></ProtectedRoute>} />
+<Route path="/parent/setup/emotion" element={<ProtectedRoute><EmotionMirrorSetup /></ProtectedRoute>} /> 
+<Route path="/child/play/emotion" element={<ProtectedRoute><EmotionMirrorGame /></ProtectedRoute>} /> 
+
+        <Route path="/child/play/draw" element={<ProtectedRoute><DrawGame /></ProtectedRoute>} />
+<Route path="/child/play/soundmatch" element={<ProtectedRoute><SoundMatchGame /></ProtectedRoute>} />
 
         <Route path="*" element={<NotFound />} />
       </Routes>
